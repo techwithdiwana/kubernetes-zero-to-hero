@@ -1,0 +1,6 @@
+# Day-1 Quick Commands
+kind create cluster --name k8s-lab
+kubectl get nodes
+kubectl cluster-info
+kubectl get pods -A
+kind delete cluster --name k8s-lab
