@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-vip
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: kube-vip
+spec:
+  hostNetwork: true
+  containers:
+  - name: kube-vip
+    image: ghcr.io/kube-vip/kube-vip:latest
+    args: ["manager"]
+    env:
+    - name: vip_arp
+      value: "true"
+    - name: address
+      value: "10.0.0.100"   # <-- CHANGE to your VIP
+    - name: interface
+      value: "ens160"       # <-- CHANGE to your NIC (e.g., eth0/ens33)
+    - name: cp_enable
+      value: "true"
+    securityContext:
+      capabilities:
+        add: ["NET_ADMIN","SYS_TIME"]
+  tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
