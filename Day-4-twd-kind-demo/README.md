@@ -240,4 +240,4 @@ By completing this lab, you now understand:
 **Tech With Diwana (TWD)**  
 🎥 *Kubernetes Zero to Hero Series*  
 📺 YouTube: [Tech With Diwana](https://youtube.com/@TechWithDiwana)  
-🐙 GitHub: [github.com/devopswithdiwana](https://github.com/devopswithdiwana)
+🐙 GitHub: [github.com/techwithdiwana](https://github.com/techwithdiwana)
