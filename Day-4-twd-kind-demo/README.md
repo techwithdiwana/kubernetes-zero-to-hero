@@ -89,6 +89,10 @@ apiVersion: kind.x-k8s.io/v1alpha4
 name: twd-cluster
 nodes:
 - role: control-plane
+  extraPortMappings:
+  - containerPort: 30080
+    hostPort: 30080
+    protocol: TCP
 - role: control-plane
 - role: worker
 - role: worker
