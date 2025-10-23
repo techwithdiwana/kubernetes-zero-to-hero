@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-nginx
+  namespace: day6
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: d-nginx
+  template:
+    metadata:
+      labels:
+        app: d-nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.25
+        ports:
+        - containerPort: 80
