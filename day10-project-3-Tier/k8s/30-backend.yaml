@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: twd-backend
+  namespace: twd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: twd-backend
+  template:
+    metadata:
+      labels:
+        app: twd-backend
+    spec:
+      containers:
+      - name: backend
+        image: techwithdiwana/backend:v1
+        ports:
+        - containerPort: 5000
+        envFrom:
+        - configMapRef:
+            name: twd-config
+        - secretRef:
+            name: twd-secret
+        env:
+        - name: MONGO_URI
+          value: "mongodb://$(MONGO_USER):$(MONGO_PASS)@$(MONGO_HOST):27017/$(MONGO_DB)"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: twd
+spec:
+  type: ClusterIP
+  selector:
+    app: twd-backend
+  ports:
+  - port: 5000
+    targetPort: 5000

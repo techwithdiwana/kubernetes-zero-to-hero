@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-check-job
+  namespace: twd
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: check-db
+        image: curlimages/curl:8.7.1
+        args: ["-sS", "http://backend-service:5000/api/info"]
