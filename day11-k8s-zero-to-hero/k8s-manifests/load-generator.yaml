@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: load-generator
+  namespace: twd-apps
+spec:
+  parallelism: 3
+  completions: 3
+  template:
+    spec:
+      containers:
+      - name: loader
+        image: busybox
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # Generate load for ~3 minutes (180 seconds)
+          i=0
+          while [ $i -lt 180 ]; do
+            wget -q -O- http://resource-demo:80 >/dev/null 2>&1 || true
+            i=$((i+1))
+            sleep 1
+          done
+      restartPolicy: Never
+  backoffLimit: 0

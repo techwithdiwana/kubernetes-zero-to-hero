@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: resource-demo
+  namespace: twd-apps
+spec:
+  selector:
+    app: resource-demo
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  type: ClusterIP

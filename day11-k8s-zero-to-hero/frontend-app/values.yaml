@@ -1,0 +1,21 @@
+replicaCount: 1
+
+image:
+  repository: techwithdiwana/frontend
+  tag: "v1"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  hosts:
+    - host: twd.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources: {}
