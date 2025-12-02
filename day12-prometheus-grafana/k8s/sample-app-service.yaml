@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: twd-frontend-svc
+  namespace: sample-app
+  labels:
+    app: twd-frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: twd-frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80

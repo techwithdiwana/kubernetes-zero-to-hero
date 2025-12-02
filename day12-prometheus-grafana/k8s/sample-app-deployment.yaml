@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: twd-frontend
+  namespace: sample-app
+  labels:
+    app: twd-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: twd-frontend
+  template:
+    metadata:
+      labels:
+        app: twd-frontend
+    spec:
+      containers:
+        - name: twd-frontend
+          image: techwithdiwana/frontend:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
