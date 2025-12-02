@@ -37,7 +37,7 @@ Everything is tested for a **local Minikube cluster** (Windows + VirtualBox is f
 Give Minikube enough resources so Prometheus, Grafana, and your app can run smoothly:
 
 ```bash
-minikube start --cpus=2 --memory=4096
+minikube start --cpus=2 --driver=VirtualBox --memory=4096
 ```
 
 Enable **Ingress** and **metrics-server**:
