@@ -26,7 +26,7 @@ Everything is tested for a **local Minikube cluster** (Windows + VirtualBox is f
 
 ## 1. Prerequisites
 
-- Windows 11
+- Windows 10/11
 - **Minikube** (with VirtualBox / Docker driver)
 - **kubectl**
 - **Helm 3**
