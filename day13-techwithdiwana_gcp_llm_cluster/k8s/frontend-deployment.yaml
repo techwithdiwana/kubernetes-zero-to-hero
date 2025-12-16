@@ -1,0 +1,31 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: twd-llm-frontend
+  namespace: techwithdiwana-llm-prod
+  labels:
+    app: twd-llm-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: twd-llm-frontend
+  template:
+    metadata:
+      labels:
+        app: twd-llm-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: techwithdiwana/llm-frontend:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"

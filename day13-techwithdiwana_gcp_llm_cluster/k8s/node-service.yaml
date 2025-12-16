@@ -1,0 +1,13 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: techwithdiwana-node-gateway
+  namespace: techwithdiwana-llm-prod
+spec:
+  selector:
+    app: twd-llm-node-gateway
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

@@ -1,0 +1,14 @@
+{
+  "name": "techwithdiwana-node-gateway",
+  "version": "1.0.0",
+  "description": "Node.js API gateway for TechWithDiwana GCP LLM demo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.0"
+  }
+}

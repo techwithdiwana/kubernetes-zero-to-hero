@@ -1,0 +1,13 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: techwithdiwana-frontend
+  namespace: techwithdiwana-llm-prod
+spec:
+  selector:
+    app: twd-llm-frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
