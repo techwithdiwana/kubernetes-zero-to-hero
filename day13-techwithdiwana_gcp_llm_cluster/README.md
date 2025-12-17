@@ -308,6 +308,39 @@ kubectl apply -f k8s/
 # 🔹 PHASE 15 – SSL (Let's Encrypt)
 
 ```bash
+letsencrypt-prod.yaml
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    email: techwithdiwana@gmail.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+
+kubectl apply -f letsencrypt-prod.yaml
+kubectl describe clusterissuer letsencrypt-prod
+
+
+------------------------------------------------
+
+Within 2–5 minutes:
+
+cert-manager issues SSL
+
+Browser shows 🔒
+
+FINAL CHECK
+
+kubectl get pods -A
+kubectl get ingress -n techwithdiwana-llm-prod
 kubectl apply -f letsencrypt-prod.yaml
 ```
 
