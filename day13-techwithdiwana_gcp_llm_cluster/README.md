@@ -1,91 +1,106 @@
 
-# 🚀 TechWithDiwana – GCP HA Kubernetes + LLM App (Zero to Hero)
+# 🚀 Tech With Diwana – GCP HA Kubernetes + LLM App (ZERO TO HERO)
 
-![GCP](https://img.shields.io/badge/GCP-Compute-blue?style=flat-square)
+![GCP](https://img.shields.io/badge/GCP-Cloud-blue?style=flat-square)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-HA-blue?style=flat-square)
-![Multi-Master](https://img.shields.io/badge/ControlPlane-Multi--Master-success?style=flat-square)
-![HAProxy](https://img.shields.io/badge/HAProxy-TCP_LoadBalancer-orange?style=flat-square)
+![Multi--Master](https://img.shields.io/badge/ControlPlane-Multi--Master-success?style=flat-square)
 ![Ingress](https://img.shields.io/badge/Ingress-NGINX-green?style=flat-square)
-![SSL](https://img.shields.io/badge/SSL-Let%27sEncrypt-yellow?style=flat-square)
+![SSL](https://img.shields.io/badge/SSL-Let's%20Encrypt-orange?style=flat-square)
 ![Runtime](https://img.shields.io/badge/Runtime-containerd-important?style=flat-square)
-![Docker](https://img.shields.io/badge/Docker-Build_Only-blue?style=flat-square)
+![Docker](https://img.shields.io/badge/Docker-Build%20Only-blue?style=flat-square)
 
 ---
 
-## 📌 Architecture
+## 📸 Application UI
+
+![App UI](app-ui.png)
+
+---
+
+## 🧠 Overview
+
+This project demonstrates a **production-grade Highly Available Kubernetes cluster on GCP** using **kubeadm (no GKE)**.
+
+Key highlights:
+- External **HAProxy TCP Load Balancer**
+- **Multi-master control plane**
+- **containerd runtime**
+- **NGINX Ingress Controller**
+- **cert-manager with Let's Encrypt**
+- **LLM-style application (Frontend + Node.js + FastAPI)**
+- **Docker used ONLY for image build (never on k8s nodes)**
+- **Complete cleanup to avoid billing**
+
+---
+
+## 🏗️ Architecture (WHAT / WHY / HOW)
+
+### WHAT
+A full bare-metal–style Kubernetes HA setup on cloud VMs.
+
+### WHY
+To learn **real Kubernetes & DevOps**, not managed abstractions.
+
+### HOW
 
 ```
-Internet
+User
  |
  | https://llm.techwithdiwana.com
  |
-DNS (A Record)
+DNS → Static Public IP
  |
-Static Public IP (GCP)
- |
-HAProxy VM
- |-- 6443 → Kubernetes API (Multi-Master)
+HAProxy (VM)
+ |-- 6443 → Kubernetes API
  |-- 80   → Ingress HTTP (cert-manager)
  |-- 443  → Ingress HTTPS (Application)
  |
-NGINX Ingress Controller (NodePort)
+NGINX Ingress
  |
-Kubernetes Services
+Services
  |
 Pods (Frontend | Node.js | FastAPI)
 ```
 
 ---
 
-## ⚠️ Important Notes (Must Read)
+# 🔹 PHASE -1 – GCP Account & Billing
 
-- Kubernetes runtime: **containerd**
-- Docker is used **ONLY for image build**
-- ❌ Do NOT build Docker images on Kubernetes nodes
-- Docker images are built on **local system / Docker host**
-- Images are already pushed to **Docker Hub**
-- Kubernetes manifests already reference these images
+**WHAT:** Create GCP account and project  
+**WHY:** Without billing, resources cannot be created  
+**HOW:**  
+- https://console.cloud.google.com  
+- Create project  
+- Enable billing  
 
 ---
 
-# ===============================
-# STEP 1: Install Google Cloud CLI
-# ===============================
+# 🔹 PHASE 0 – Google Cloud CLI (Windows)
 
 ```powershell
 winget install -e --id Google.CloudSDK
 ```
-
-Restart PowerShell.
-
+Restart PowerShell:
 ```powershell
-gcloud version
 gcloud init
-gcloud config set project <YOUR_PROJECT_ID>
+gcloud config set project <PROJECT_ID>
 gcloud config set compute/region asia-south1
 gcloud config set compute/zone asia-south1-a
 gcloud services enable compute.googleapis.com iam.googleapis.com
-gcloud config list
 ```
 
 ---
 
-# PHASE 0 – SSH Key (Secure Access)
+# 🔹 PHASE 1 – SSH Key
 
 ```powershell
 ssh-keygen -t ed25519 -f $HOME\.ssh\gcp-techwithdiwana
 cat $HOME\.ssh\gcp-techwithdiwana.pub
 ```
 
-Add the public key in **GCP Console → VM → Edit → SSH Keys**.
-
-```powershell
-ssh -i $HOME\.ssh\gcp-techwithdiwana ubuntu@<VM_PUBLIC_IP>
-```
-
 ---
 
-# PHASE 1 – VM Creation (5 VMs)
+# 🔹 PHASE 2 – VM Creation
 
 ```powershell
 $ZONE="asia-south1-a"
@@ -104,23 +119,23 @@ foreach ($vm in "haproxy-1","k8s-master-1","k8s-master-2","k8s-worker-1","k8s-wo
 
 ---
 
-# PHASE 2 – Firewall
+# 🔹 PHASE 3 – Firewall
 
 ```powershell
 gcloud compute firewall-rules create allow-k8s-all `
-  --allow="tcp:22,tcp:80,tcp:443,tcp:6443,tcp:30000-32767" `
-  --source-ranges=0.0.0.0/0 `
-  --target-tags=k8s-node
+  --allow tcp:22,tcp:80,tcp:443,tcp:6443,tcp:30000-32767 `
+  --source-ranges 0.0.0.0/0 `
+  --target-tags k8s-node
 ```
 
 ---
 
-## NOTE
-PHASE 3, PHASE 4, and PHASE 5 must be executed on **ALL Kubernetes nodes**.
+## ⚠️ NOTE
+PHASE 4–6 must be executed on **ALL Kubernetes nodes**.
 
 ---
 
-# PHASE 3 – Linux Prep
+# 🔹 PHASE 4 – Linux Prep
 
 ```bash
 sudo -i
@@ -128,30 +143,24 @@ swapoff -a
 sed -i '/ swap / s/^/#/' /etc/fstab
 modprobe overlay
 modprobe br_netfilter
-
 cat <<EOF >/etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-iptables=1
 net.bridge.bridge-nf-call-ip6tables=1
 net.ipv4.ip_forward=1
 EOF
-
 sysctl --system
 ```
 
 ---
 
-# PHASE 4 – containerd Runtime
+# 🔹 PHASE 5 – containerd Runtime
 
 ```bash
-apt update
-apt install -y containerd
-
+apt update && apt install -y containerd
 mkdir -p /etc/containerd
 containerd config default > /etc/containerd/config.toml
-
 sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
 sed -i 's|sandbox_image = .*|sandbox_image = "registry.k8s.io/pause:3.9"|' /etc/containerd/config.toml
-
 systemctl daemon-reexec
 systemctl restart containerd
 systemctl enable containerd
@@ -159,16 +168,13 @@ systemctl enable containerd
 
 ---
 
-# PHASE 5 – Kubernetes Binaries
+# 🔹 PHASE 6 – Kubernetes Binaries
 
 ```bash
 apt install -y apt-transport-https ca-certificates curl gpg
-
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key |
 gpg --dearmor -o /etc/apt/keyrings/kubernetes.gpg
-
 echo "deb [signed-by=/etc/apt/keyrings/kubernetes.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /" > /etc/apt/sources.list.d/kubernetes.list
-
 apt update
 apt install -y kubeadm kubelet kubectl
 apt-mark hold kubeadm kubelet kubectl
@@ -176,15 +182,14 @@ apt-mark hold kubeadm kubelet kubectl
 
 ---
 
-# PHASE 6 – HAProxy (K8s API – 6443)
-
-```bash
-apt update
-apt install -y haproxy
-nano /etc/haproxy/haproxy.cfg
-```
+# 🔹 PHASE 7 – HAProxy (K8s API)
 
 ```cfg
+apt update
+apt install -y haproxy
+
+nano /etc/haproxy/haproxy.cfg
+
 frontend kubernetes
     bind *:6443
     mode tcp
@@ -195,51 +200,36 @@ backend k8s-masters
     balance roundrobin
     server master1 <MASTER1_PRIVATE_IP>:6443 check
     server master2 <MASTER2_PRIVATE_IP>:6443 check
-```
 
-```bash
 systemctl restart haproxy
 systemctl enable haproxy
 ```
 
 ---
 
-# PHASE 7 – kubeadm init (MASTER-1)
+# 🔹 PHASE 8 – kubeadm init
 
 ```bash
-kubeadm init   --control-plane-endpoint "<HAPROXY_PRIVATE_IP>:6443"   --pod-network-cidr=10.244.0.0/16   --upload-certs
-```
-
-```bash
-mkdir -p ~/.kube
-cp /etc/kubernetes/admin.conf ~/.kube/config
-chown $(id -u):$(id -g) ~/.kube/config
+kubeadm init --control-plane-endpoint <HAPROXY_PRIVATE_IP>:6443 --pod-network-cidr=10.244.0.0/16 --upload-certs
 ```
 
 ---
 
-# PHASE 8 – Join Nodes
+# 🔹 PHASE 9 – Join Nodes
 
-```bash
-kubeadm join <HAPROXY_PRIVATE_IP>:6443   --control-plane   --token <TOKEN>   --discovery-token-ca-cert-hash sha256:<HASH>   --certificate-key <CERT_KEY>
-```
-
-```bash
-kubeadm join <HAPROXY_PRIVATE_IP>:6443   --token <TOKEN>   --discovery-token-ca-cert-hash sha256:<HASH>
-```
+(Master & workers via kubeadm join)
 
 ---
 
-# PHASE 9 – CNI (Flannel)
+# 🔹 PHASE 10 – CNI
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
-kubectl get nodes
 ```
 
 ---
 
-# PHASE 10 – NGINX Ingress Controller
+# 🔹 PHASE 11 – Ingress Controller
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.1/deploy/static/provider/baremetal/deploy.yaml
@@ -247,7 +237,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 
 ---
 
-# PHASE 11 – cert-manager
+# 🔹 PHASE 12 – cert-manager
 
 ```bash
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
@@ -255,11 +245,11 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/do
 
 ---
 
-# PHASE 11.5 – HAProxy Ingress (80 / 443)
+# 🔹 PHASE 12.5 – HAProxy Ingress (80 / 443)
 
 ```bash
 kubectl get svc ingress-nginx-controller -n ingress-nginx
-nano /etc/haproxy/haproxy.cfg
+sudo nano /etc/haproxy/haproxy.cfg
 ```
 
 ```cfg
@@ -292,20 +282,21 @@ systemctl restart haproxy
 
 ---
 
-# PHASE 12 – Docker Image Build (LOCAL SYSTEM ONLY)
+# 🔹 PHASE 13 – Docker Image Build (NOT on k8s nodes)
+
+Docker images MUST be built on:
+- Local laptop
+- Dedicated Docker VM
+- CI/CD pipeline
 
 ```bash
-git clone https://github.com/techwithdiwana/kubernetes-zero-to-hero.git
-cd kubernetes-zero-to-hero/day13-techwithdiwana_gcp_llm_cluster/backend-fastapi
 docker build -t techwithdiwana/llm-fastapi:v1 .
 docker push techwithdiwana/llm-fastapi:v1
 ```
 
-Repeat the same for **Node.js** and **Frontend**.
-
 ---
 
-# PHASE 13 – Application Deploy
+# 🔹 PHASE 14 – Application Deploy
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
@@ -314,48 +305,23 @@ kubectl apply -f k8s/
 
 ---
 
-# PHASE 14 – DNS
-
-Create an **A record**:
-
-```
-llm.techwithdiwana.com → <STATIC_PUBLIC_IP_OF_HA_PROXY>
-```
-
----
-
-# PHASE 15 – Let's Encrypt
+# 🔹 PHASE 15 – SSL (Let's Encrypt)
 
 ```bash
 kubectl apply -f letsencrypt-prod.yaml
-kubectl describe clusterissuer letsencrypt-prod
 ```
 
 ---
 
-# FINAL CHECK
-
-```bash
-kubectl get pods -A
-kubectl get ingress -n techwithdiwana-llm-prod
-```
-
-Open:
-👉 https://llm.techwithdiwana.com
-
----
-
-# 🧹 CLEANUP (VERY IMPORTANT)
+# 🧹 PHASE 16 – CLEANUP
 
 ```powershell
 gcloud compute instances delete haproxy-1 k8s-master-1 k8s-master-2 k8s-worker-1 k8s-worker-2 --zone=asia-south1-a --quiet
 gcloud compute firewall-rules delete allow-k8s-all --quiet
-gcloud compute addresses list
 gcloud compute addresses delete <STATIC_IP_NAME> --region=asia-south1 --quiet
-gcloud compute instances list
 ```
 
 ---
 
 ## 📜 License
-MIT License – Tech With Diwana
+MIT License © Tech With Diwana
