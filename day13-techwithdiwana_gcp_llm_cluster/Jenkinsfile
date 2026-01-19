@@ -1,0 +1,114 @@
+pipeline {
+  agent any
+
+  options {
+    timestamps()
+    disableConcurrentBuilds()
+  }
+
+  environment {
+    ROOT_DIR = "day13-techwithdiwana_gcp_llm_cluster"
+    FRONTEND_DIR = "${ROOT_DIR}/frontend"
+    NODE_DIR = "${ROOT_DIR}/backend-node"
+    FASTAPI_DIR = "${ROOT_DIR}/backend-fastapi"
+
+    FRONTEND_IMAGE = "twd-frontend"
+    NODE_IMAGE = "twd-backend-node"
+    FASTAPI_IMAGE = "twd-backend-fastapi"
+
+    IMAGE_TAG = "ci-${BUILD_NUMBER}"
+  }
+
+  stages {
+
+    stage('Checkout') {
+      steps {
+        checkout scm
+        sh 'ls -la'
+      }
+    }
+
+    stage('Validate Repo Paths') {
+      steps {
+        sh '''
+          set -e
+          test -d "${FRONTEND_DIR}"
+          test -d "${NODE_DIR}"
+          test -d "${FASTAPI_DIR}"
+          echo "Repo paths look OK"
+        '''
+      }
+    }
+
+    stage('Frontend: Docker Build') {
+      steps {
+        sh '''
+          set -e
+          cd "${FRONTEND_DIR}"
+          docker build -t ${FRONTEND_IMAGE}:${IMAGE_TAG} .
+        '''
+      }
+    }
+
+    stage('Backend Node: Docker Build') {
+      steps {
+        sh '''
+          set -e
+          cd "${NODE_DIR}"
+          docker build -t ${NODE_IMAGE}:${IMAGE_TAG} .
+        '''
+      }
+    }
+
+    stage('Backend FastAPI: Docker Build') {
+      steps {
+        sh '''
+          set -e
+          cd "${FASTAPI_DIR}"
+          docker build -t ${FASTAPI_IMAGE}:${IMAGE_TAG} .
+        '''
+      }
+    }
+
+    stage('API Smoke Check (FastAPI healthz)') {
+      steps {
+        sh '''
+          set -e
+
+          docker rm -f twd_fastapi_ci || true
+          docker run -d --name twd_fastapi_ci -p 9001:8000 ${FASTAPI_IMAGE}:${IMAGE_TAG}
+
+          sleep 5
+          curl -sS http://127.0.0.1:9001/healthz
+
+          docker rm -f twd_fastapi_ci || true
+        '''
+      }
+    }
+
+    stage('DB Migrations (Scaffold Only)') {
+      steps {
+        sh '''
+          echo "Day-4 CI: DB folder is included for Day-5 CD usage."
+          echo "No DB migration is applied in Day-4."
+          ls -la ${ROOT_DIR}/db || true
+        '''
+      }
+    }
+
+    stage('Tests Folder (Scaffold)') {
+      steps {
+        sh '''
+          echo "Day-4 CI: tests folder scaffold is included."
+          ls -la ${ROOT_DIR}/tests || true
+        '''
+      }
+    }
+  }
+
+  post {
+    always {
+      echo "CI pipeline finished"
+    }
+  }
+}
