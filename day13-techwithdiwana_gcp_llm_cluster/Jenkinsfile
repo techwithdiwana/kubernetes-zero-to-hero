@@ -78,8 +78,8 @@ pipeline {
           docker rm -f twd_fastapi_ci || true
           docker run -d --name twd_fastapi_ci -p 9001:8000 ${FASTAPI_IMAGE}:${IMAGE_TAG}
 
-          sleep 5
-          curl -sS http://127.0.0.1:9001/healthz
+          sleep 15
+          curl -sS --retry 10 --retry-delay 2 --retry-connrefused http://127.0.0.1:9001/healthz
 
           docker rm -f twd_fastapi_ci || true
         '''
