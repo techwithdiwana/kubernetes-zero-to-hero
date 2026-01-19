@@ -7,16 +7,20 @@ pipeline {
   }
 
   environment {
-    ROOT_DIR = "day13-techwithdiwana_gcp_llm_cluster"
+    ROOT_DIR     = "day13-techwithdiwana_gcp_llm_cluster"
     FRONTEND_DIR = "${ROOT_DIR}/frontend"
-    NODE_DIR = "${ROOT_DIR}/backend-node"
-    FASTAPI_DIR = "${ROOT_DIR}/backend-fastapi"
+    NODE_DIR     = "${ROOT_DIR}/backend-node"
+    FASTAPI_DIR  = "${ROOT_DIR}/backend-fastapi"
 
     FRONTEND_IMAGE = "twd-frontend"
-    NODE_IMAGE = "twd-backend-node"
-    FASTAPI_IMAGE = "twd-backend-fastapi"
+    NODE_IMAGE     = "twd-backend-node"
+    FASTAPI_IMAGE  = "twd-backend-fastapi"
 
     IMAGE_TAG = "ci-${BUILD_NUMBER}"
+
+    FASTAPI_CONTAINER = "twd_fastapi_ci"
+    FASTAPI_HOST_PORT = "9001"
+    FASTAPI_CONT_PORT = "8000"
   }
 
   stages {
@@ -24,7 +28,11 @@ pipeline {
     stage('Checkout') {
       steps {
         checkout scm
-        sh 'ls -la'
+        sh '''
+          set -e
+          echo "Repo root files:"
+          ls -la
+        '''
       }
     }
 
@@ -35,7 +43,7 @@ pipeline {
           test -d "${FRONTEND_DIR}"
           test -d "${NODE_DIR}"
           test -d "${FASTAPI_DIR}"
-          echo "Repo paths look OK"
+          echo "Repo paths look OK "
         '''
       }
     }
@@ -46,6 +54,7 @@ pipeline {
           set -e
           cd "${FRONTEND_DIR}"
           docker build -t ${FRONTEND_IMAGE}:${IMAGE_TAG} .
+          echo "Frontend image built: ${FRONTEND_IMAGE}:${IMAGE_TAG} "
         '''
       }
     }
@@ -56,6 +65,7 @@ pipeline {
           set -e
           cd "${NODE_DIR}"
           docker build -t ${NODE_IMAGE}:${IMAGE_TAG} .
+          echo "Node backend image built: ${NODE_IMAGE}:${IMAGE_TAG} "
         '''
       }
     }
@@ -66,6 +76,7 @@ pipeline {
           set -e
           cd "${FASTAPI_DIR}"
           docker build -t ${FASTAPI_IMAGE}:${IMAGE_TAG} .
+          echo "FastAPI image built: ${FASTAPI_IMAGE}:${IMAGE_TAG} "
         '''
       }
     }
@@ -75,13 +86,34 @@ pipeline {
         sh '''
           set -e
 
-          docker rm -f twd_fastapi_ci || true
-          docker run -d --name twd_fastapi_ci -p 9001:8000 ${FASTAPI_IMAGE}:${IMAGE_TAG}
+          echo "Cleaning old container if exists..."
+          docker rm -f ${FASTAPI_CONTAINER} || true
 
-          sleep 15
-          curl -sS --retry 10 --retry-delay 2 --retry-connrefused http://127.0.0.1:9001/healthz
+          echo "Starting FastAPI container..."
+          docker run -d --name ${FASTAPI_CONTAINER} -p 127.0.0.1:${FASTAPI_HOST_PORT}:${FASTAPI_CONT_PORT} ${FASTAPI_IMAGE}:${IMAGE_TAG}
 
-          docker rm -f twd_fastapi_ci || true
+          echo "Waiting for FastAPI /healthz to become ready..."
+          for i in $(seq 1 45); do
+            if curl -sS http://127.0.0.1:${FASTAPI_HOST_PORT}/healthz >/dev/null 2>&1; then
+              echo "FastAPI is healthy "
+              curl -sS http://127.0.0.1:${FASTAPI_HOST_PORT}/healthz
+              docker rm -f ${FASTAPI_CONTAINER} || true
+              exit 0
+            fi
+
+            echo "Not ready yet... retry $i"
+            sleep 2
+          done
+
+          echo "FastAPI did not become healthy "
+          echo "Container status:"
+          docker ps -a | grep ${FASTAPI_CONTAINER} || true
+
+          echo "Last 200 logs:"
+          docker logs --tail 200 ${FASTAPI_CONTAINER} || true
+
+          docker rm -f ${FASTAPI_CONTAINER} || true
+          exit 1
         '''
       }
     }
@@ -89,6 +121,7 @@ pipeline {
     stage('DB Migrations (Scaffold Only)') {
       steps {
         sh '''
+          set -e
           echo "Day-4 CI: DB folder is included for Day-5 CD usage."
           echo "No DB migration is applied in Day-4."
           ls -la ${ROOT_DIR}/db || true
@@ -99,8 +132,19 @@ pipeline {
     stage('Tests Folder (Scaffold)') {
       steps {
         sh '''
+          set -e
           echo "Day-4 CI: tests folder scaffold is included."
           ls -la ${ROOT_DIR}/tests || true
+        '''
+      }
+    }
+
+    stage('Images Summary') {
+      steps {
+        sh '''
+          set -e
+          echo "Built images summary:"
+          docker image ls | head -n 30
         '''
       }
     }
@@ -108,7 +152,11 @@ pipeline {
 
   post {
     always {
-      echo "CI pipeline finished"
+      echo "CI pipeline finished "
+      sh '''
+        echo "Cleanup: removing test container if exists..."
+        docker rm -f twd_fastapi_ci || true
+      '''
     }
   }
 }
