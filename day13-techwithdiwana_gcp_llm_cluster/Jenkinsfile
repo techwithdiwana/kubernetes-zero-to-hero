@@ -141,7 +141,7 @@ pipeline {
           node -v
           npm -v
 
-          npm ci
+          npm install
           npx playwright install --with-deps
 
           rm -rf playwright-report test-results || true
