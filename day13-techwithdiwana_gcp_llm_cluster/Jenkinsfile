@@ -12,6 +12,10 @@ pipeline {
     NODE_DIR     = "${ROOT_DIR}/backend-node"
     FASTAPI_DIR  = "${ROOT_DIR}/backend-fastapi"
 
+    TESTS_DIR    = "${ROOT_DIR}/tests"
+    API_TEST_DIR = "${ROOT_DIR}/tests/api"
+    UI_TEST_DIR  = "${ROOT_DIR}/tests/ui"
+
     FRONTEND_IMAGE = "twd-frontend"
     NODE_IMAGE     = "twd-backend-node"
     FASTAPI_IMAGE  = "twd-backend-fastapi"
@@ -21,6 +25,8 @@ pipeline {
     FASTAPI_CONTAINER = "twd_fastapi_ci"
     FASTAPI_HOST_PORT = "9001"
     FASTAPI_CONT_PORT = "8000"
+
+    PW_REPORT_DIR = "playwright-report"
   }
 
   stages {
@@ -43,7 +49,9 @@ pipeline {
           test -d "${FRONTEND_DIR}"
           test -d "${NODE_DIR}"
           test -d "${FASTAPI_DIR}"
-          echo "Repo paths look OK "
+          test -d "${TESTS_DIR}"
+          test -d "${API_TEST_DIR}"
+          echo "Repo paths look OK"
         '''
       }
     }
@@ -54,7 +62,7 @@ pipeline {
           set -e
           cd "${FRONTEND_DIR}"
           docker build -t ${FRONTEND_IMAGE}:${IMAGE_TAG} .
-          echo "Frontend image built: ${FRONTEND_IMAGE}:${IMAGE_TAG} "
+          echo "Frontend image built: ${FRONTEND_IMAGE}:${IMAGE_TAG}"
         '''
       }
     }
@@ -65,7 +73,7 @@ pipeline {
           set -e
           cd "${NODE_DIR}"
           docker build -t ${NODE_IMAGE}:${IMAGE_TAG} .
-          echo "Node backend image built: ${NODE_IMAGE}:${IMAGE_TAG} "
+          echo "Node backend image built: ${NODE_IMAGE}:${IMAGE_TAG}"
         '''
       }
     }
@@ -76,12 +84,12 @@ pipeline {
           set -e
           cd "${FASTAPI_DIR}"
           docker build -t ${FASTAPI_IMAGE}:${IMAGE_TAG} .
-          echo "FastAPI image built: ${FASTAPI_IMAGE}:${IMAGE_TAG} "
+          echo "FastAPI image built: ${FASTAPI_IMAGE}:${IMAGE_TAG}"
         '''
       }
     }
 
-    stage('API Smoke Check (FastAPI healthz)') {
+    stage('Start FastAPI Container') {
       steps {
         sh '''
           set -e
@@ -95,9 +103,8 @@ pipeline {
           echo "Waiting for FastAPI /healthz to become ready..."
           for i in $(seq 1 45); do
             if curl -sS http://127.0.0.1:${FASTAPI_HOST_PORT}/healthz >/dev/null 2>&1; then
-              echo "FastAPI is healthy "
+              echo "FastAPI is healthy"
               curl -sS http://127.0.0.1:${FASTAPI_HOST_PORT}/healthz
-              docker rm -f ${FASTAPI_CONTAINER} || true
               exit 0
             fi
 
@@ -105,37 +112,72 @@ pipeline {
             sleep 2
           done
 
-          echo "FastAPI did not become healthy "
+          echo "FastAPI did not become healthy"
           echo "Container status:"
           docker ps -a | grep ${FASTAPI_CONTAINER} || true
 
           echo "Last 200 logs:"
           docker logs --tail 200 ${FASTAPI_CONTAINER} || true
 
-          docker rm -f ${FASTAPI_CONTAINER} || true
           exit 1
         '''
       }
     }
 
-    stage('DB Migrations (Scaffold Only)') {
+    stage('API Smoke Test Script (tests/api/smoke.sh)') {
       steps {
         sh '''
           set -e
-          echo "Day-4 CI: DB folder is included for Day-5 CD usage."
-          echo "No DB migration is applied in Day-4."
-          ls -la ${ROOT_DIR}/db || true
+          echo "Running API smoke script: ${API_TEST_DIR}/smoke.sh"
+
+          if [ -f "${API_TEST_DIR}/smoke.sh" ]; then
+            chmod +x "${API_TEST_DIR}/smoke.sh"
+            bash "${API_TEST_DIR}/smoke.sh"
+          else
+            echo "smoke.sh not found at ${API_TEST_DIR}/smoke.sh"
+            exit 1
+          fi
         '''
       }
     }
 
-    stage('Tests Folder (Scaffold)') {
+    stage('UI Tests (Playwright)') {
       steps {
         sh '''
           set -e
-          echo "Day-4 CI: tests folder scaffold is included."
-          ls -la ${ROOT_DIR}/tests || true
+
+          echo "Checking UI tests folder..."
+          if [ ! -d "${UI_TEST_DIR}" ]; then
+            echo "UI tests folder not found: ${UI_TEST_DIR}"
+            echo "Skipping Playwright stage (folder missing)"
+            exit 0
+          fi
+
+          echo "Running Playwright UI tests..."
+          node -v
+          npm -v
+
+          cd "${UI_TEST_DIR}"
+          ls -la
+
+          if [ -f package.json ]; then
+            npm ci
+          else
+            echo "package.json not found in tests/ui"
+            echo "Skipping Playwright stage (no package.json)"
+            exit 0
+          fi
+
+          npx playwright install --with-deps
+          npx playwright test
+
+          echo "Playwright UI tests completed"
         '''
+      }
+      post {
+        always {
+          archiveArtifacts artifacts: "${ROOT_DIR}/tests/ui/${PW_REPORT_DIR}/**", allowEmptyArchive: true
+        }
       }
     }
 
@@ -152,10 +194,10 @@ pipeline {
 
   post {
     always {
-      echo "CI pipeline finished "
+      echo "CI pipeline finished"
       sh '''
         echo "Cleanup: removing test container if exists..."
-        docker rm -f twd_fastapi_ci || true
+        docker rm -f ${FASTAPI_CONTAINER} || true
       '''
     }
   }
