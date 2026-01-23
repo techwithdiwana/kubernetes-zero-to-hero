@@ -61,6 +61,7 @@ pipeline {
       steps {
         sh '''
           set -e
+          echo "building frontend image..."
           cd "${FRONTEND_DIR}"
           docker build -t ${FRONTEND_IMAGE}:${IMAGE_TAG} .
         '''
@@ -71,6 +72,7 @@ pipeline {
       steps {
         sh '''
           set -e
+          echo "building node backend image..."
           cd "${NODE_DIR}"
           docker build -t ${NODE_IMAGE}:${IMAGE_TAG} .
         '''
@@ -81,6 +83,7 @@ pipeline {
       steps {
         sh '''
           set -e
+          echo "building fastapi image..."
           cd "${FASTAPI_DIR}"
           docker build -t ${FASTAPI_IMAGE}:${IMAGE_TAG} .
         '''
@@ -92,8 +95,10 @@ pipeline {
         sh '''
           set -e
 
+          echo "removing old fastapi container if exists..."
           docker rm -f ${FASTAPI_CONTAINER} || true
 
+          echo "starting fastapi container..."
           docker run -d --name ${FASTAPI_CONTAINER} \
             -p 127.0.0.1:${FASTAPI_HOST_PORT}:${FASTAPI_CONT_PORT} \
             ${FASTAPI_IMAGE}:${IMAGE_TAG}
@@ -110,6 +115,7 @@ pipeline {
           done
 
           echo "fastapi not ready"
+          echo "container logs:"
           docker logs --tail 200 ${FASTAPI_CONTAINER} || true
           exit 1
         '''
@@ -141,14 +147,19 @@ pipeline {
           node -v
           npm -v
 
+          echo "installing ui test dependencies..."
           npm install
-          npx playwright install --with-deps
 
+          echo "installing playwright browsers..."
+          npx playwright install
+
+          echo "cleaning old reports..."
           rm -rf playwright-report test-results || true
 
+          echo "running playwright tests..."
           npx playwright test --reporter=html
 
-          echo "playwright report generated"
+          echo "playwright report generated:"
           ls -la playwright-report || true
         '''
       }
@@ -164,6 +175,7 @@ pipeline {
       steps {
         sh '''
           set -e
+          echo "docker images summary:"
           docker image ls | head -n 30
         '''
       }
