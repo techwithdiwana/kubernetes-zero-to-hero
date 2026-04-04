@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Tech With Diwana — Coming Soon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#0b132b;--bg2:#13294b;--card:#11203a;--text:#e6f1ff;--muted:#a8b2d1;--accent:#64ffda;--cta:#ff0033;}
+    *{box-sizing:border-box} html,body{margin:0;padding:0;background:
+      radial-gradient(circle at 20% 10%,rgba(100,255,218,.08),transparent 35%),
+      linear-gradient(180deg,var(--bg),var(--bg2));color:var(--text);font-family:Poppins,system-ui,Segoe UI,Roboto,sans-serif}
+    a{color:var(--text);text-decoration:none}
+    .nav{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;
+      gap:16px;padding:10px 18px;background:rgba(10,17,35,.6);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.06)}
+    .logo{width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.2)}
+    .nav-left{display:flex;align-items:center;gap:10px}
+    .brand{font-weight:800}
+    .brand small{display:block;font-weight:600;color:var(--muted);margin-top:-3px;font-size:.78rem}
+    .nav-links a{padding:8px 10px;color:var(--muted)} .nav-links a:hover{color:#fff}
+    .hero{max-width:1100px;margin:28px auto 16px;padding:18px;display:grid;grid-template-columns:1fr 1.2fr;gap:16px;align-items:center}
+    .portraitWrap{display:grid;place-items:center}
+    .ring{width:min(64vw,340px);height:min(64vw,340px);border-radius:50%;display:grid;place-items:center;
+      background:radial-gradient(circle at 50% 50%, rgba(100,255,218,.14), transparent 60%);box-shadow:0 20px 60px rgba(0,0,0,.45);}
+    .portrait{width:85%;height:85%;border-radius:50%;object-fit:cover;border:4px solid rgba(255,255,255,.15);
+      box-shadow:0 12px 40px rgba(0,0,0,.5), 0 0 0 8px rgba(100,255,218,.15);background:#0f1a33;}
+    .heroText{padding:10px}
+    h1{margin:0 0 10px 0;font-size:clamp(28px,4vw,46px);} h1 .glow{color:var(--accent);text-shadow:0 0 22px rgba(100,255,218,.55)}
+    .sub{color:var(--muted);margin:0 0 12px 0}
+    .pill{display:inline-block;padding:10px 16px;border-radius:999px;background:rgba(100,255,218,.12);
+      border:1px solid rgba(100,255,218,.35);box-shadow:0 8px 24px rgba(100,255,218,.18)}
+    .cta{max-width:1100px;margin:14px auto 0;padding:0 18px}
+    .ctaBox{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;
+      background:linear-gradient(90deg, rgba(100,255,218,.12), rgba(100,255,218,.04));border:1px solid rgba(100,255,218,.35);border-radius:16px;padding:14px 16px}
+    .ctaTitle{font-weight:800}
+    .btn{display:inline-block;background:var(--accent);color:#003b34;font-weight:800;border:none;border-radius:10px;padding:10px 14px}
+    .btn.sub{background:var(--cta);color:#fff;box-shadow:0 10px 30px rgba(255,0,51,.35)}
+    .section{max-width:1100px;margin:24px auto;padding:0 18px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+    .card{border-radius:16px;background:linear-gradient(180deg,rgba(17,32,58,.95),rgba(17,32,58,.84));
+      border:1px solid rgba(255,255,255,.06);box-shadow:0 12px 35px rgba(0,0,0,.35);overflow:hidden;padding:16px}
+    footer{text-align:center;color:var(--muted);padding:18px 0;border-top:1px solid rgba(255,255,255,.06);margin-top:24px}
+    @media (max-width:900px){.hero{grid-template-columns:1fr;gap:10px;text-align:center}.heroText{padding:0}}
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="nav-left">
+      <img src="./assets/logo.jpg" class="logo" alt="TWD"/>
+      <div class="brand">Tech With Diwana <small>DevOps • Cloud • Kubernetes</small></div>
+    </div>
+    <nav class="nav-links">
+      <a href="#about">About</a>
+      <a href="#courses">Courses</a>
+      <a href="#subscribe">Subscribe</a>
+    </nav>
+  </header>
+
+  <section class="hero" id="about">
+    <div class="portraitWrap">
+      <div class="ring">
+        <img src="./assets/hero.jpg" alt="Diwana Kumar" class="portrait"/>
+      </div>
+    </div>
+    <div class="heroText">
+      <h1>Site Coming Soon with <span class="glow">Brand New Content</span></h1>
+      <p class="sub">Crystal clear UI • Clean typography • Perfect branding — just like a production site.</p>
+      <div class="pill">Demo running on Kubernetes (Minikube) — served by Nginx</div>
+    </div>
+  </section>
+
+  <section class="cta" id="subscribe">
+    <div class="ctaBox">
+      <div class="ctaTitle">Don’t miss the launch — subscribe to <span class="glow">Tech With Diwana</span> on YouTube</div>
+      <a class="btn sub" href="https://www.youtube.com/@TechWithDiwana" target="_blank" rel="noreferrer">Subscribe</a>
+    </div>
+  </section>
+
+  <section class="section" id="courses">
+    <div class="grid">
+      <div class="card">
+        <h3>Kubernetes Zero to Hero</h3>
+        <p>Deploy multi-tier apps, Ingress, Jobs & CronJobs, Helm — end to end.</p>
+        <a class="btn" id="viewCourses" target="_blank">View Courses (API)</a>
+      </div>
+      <div class="card">
+        <h3>Docker & CI/CD</h3>
+        <p>Build, test, ship — with secure pipelines and registries.</p>
+        <span class="btn">Coming Soon</span>
+      </div>
+      <div class="card">
+        <h3>Terraform on AWS</h3>
+        <p>Infrastructure as Code with real production patterns.</p>
+        <span class="btn">Coming Soon</span>
+      </div>
+    </div>
+  </section>
+
+  <footer>© 2025 Tech With Diwana • All rights reserved.</footer>
+
+  <script>
+    // Ingress-friendly: use same origin + /api path
+    // If you are using NodePort testing temporarily, set USE_NODEPORT = true and BACKEND_NODEPORT accordingly.
+    const USE_NODEPORT = false; // <- set to true only for demo when you need direct nodePort access
+    const BACKEND_NODEPORT = 30500; // only used if USE_NODEPORT = true
+
+    const host = location.hostname;         // e.g. techwithdiwana.local or 192.168.x.x
+    const origin = location.origin;         // protocol + host (and port if any)
+    let backendBase;
+
+    if (USE_NODEPORT) {
+      // direct nodeport (demo only)
+      backendBase = `${location.protocol}//${host}:${BACKEND_NODEPORT}`;
+    } else {
+      // ingress / same-origin approach (production-like)
+      // Use /api root - Ingress will route /api/* -> backend-service
+      backendBase = `${origin}/api`;
+    }
+
+    // set link
+    document.getElementById('viewCourses').href = `${backendBase}/courses`;
+  </script>
+</body>
+</html>
